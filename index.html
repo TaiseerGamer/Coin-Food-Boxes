@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+<title>Food Coin Clicker - Simulator</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <div class="header-inner">
+      <div class="brand">
+        <div class="logo">🍔</div>
+        <div>
+          <div class="title">Food Coin Clicker</div>
+          <div class="subtitle">Roblox-style simulator</div>
+        </div>
+      <div class="balance-wrap">
+        <div class="balance glass">
+          <div class="balance-label">Balance</div>
+          <div id="moneyDisplay" class="balance-value">$0</div>
+        </div>
+        <button id="resetBtn" class="reset glass" title="Reset">↺</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main">
+    <aside class="panel glass left">
+      <div class="panel-head">
+        <h2 class="panel-title">🎒 Inventory</h2>
+        <span id="inventoryValue" class="badge">$0</span>
+      </div>
+      <div class="actions">
+        <button id="sellAllBtn" class="btn btn-primary">Sell All</button>
+        <button id="sellDupBtn" class="btn btn-ghost">Dupes</button>
+      </div>
+      <div id="inventoryGrid" class="inventory"></div>
+      <div class="stats">
+        <h3 class="stats-title">Stats</h3>
+        <div class="stats-grid">
+          <div class="stat"><div class="stat-label">Clicks</div><div id="statClicks" class="stat-value">0</div></div>
+          <div class="stat"><div class="stat-label">Earned</div><div id="statEarned" class="stat-value">$0</div></div>
+          <div class="stat"><div class="stat-label">Boxes</div><div id="statBoxes" class="stat-value">0</div></div>
+          <div class="stat"><div class="stat-label">Rarest</div><div id="statRarest" class="stat-value">-</div></div>
+        </div>
+      </div>
+    </aside>
+
+    <section class="center">
+      <div class="coin-wrap">
+        <div class="glow1"></div>
+        <div class="glow2"></div>
+        <button id="coinBtn" class="coin coin-btn no-select">
+          <div class="coin-shine"></div>
+          <div class="coin-inner">
+            <div class="coin-dollar">$</div>
+            <div class="coin-text">CLICK</div>
+          </div>
+        </button>
+        <div id="particleContainer" style="position:absolute;inset:0;pointer-events:none;z-index:20"></div>
+      </div>
+      <div class="info">
+        <div class="pill glass">
+          <div>
+            <div class="info-label">Per Click</div>
+            <div id="perClickDisplay" class="info-val">+$1</div>
+          </div>
+          <div class="divider"></div>
+          <div>
+            <div class="info-label">Auto</div>
+            <div id="autoDisplay" class="info-val2">0/sec</div>
+          </div>
+        </div>
+        <div class="total">
+          <span class="total-badge">Total: <b id="clickCount" style="color:white">0</b></span>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel glass right">
+      <div class="panel-head">
+        <h2 class="panel-title">🛒 Food Boxes</h2>
+        <span class="badge" style="background:rgba(124,58,237,.2);color:#c4b5fd">Shop</span>
+      </div>
+      <div id="shopContainer" class="shop"></div>
+      <p style="font-size:11px;opacity:.5;margin-top:12px;text-align:center">Tap a box to open • Hover for odds</p>
+    </aside>
+  </main>
+
+  <section class="upgrades">
+    <div class="panel glass">
+      <div class="panel-head" style="margin-bottom:16px">
+        <h2 class="panel-title">⚡ Upgrades</h2>
+        <div style="font-size:11px;opacity:.6">Permanent boosts</div>
+      </div>
+      <div id="upgradesContainer" class="up-grid"></div>
+    </div>
+  </section>
+</div>
+
+<div id="openModal" class="modal hidden">
+  <div class="modal-content">
+    <div id="boxStage" class="box-stage">
+      <div style="position:relative">
+        <div style="position:absolute;inset:0;filter:blur(48px);opacity:.6;background:#7c3aed;border-radius:50%;transform:scale(1.5)"></div>
+        <div id="openingBox" class="opening-box">📦</div>
+      </div>
+      <div id="openingText" class="opening-text">Opening...</div>
+      <div id="sparkles" class="sparkles"></div>
+      <div class="progress"><div id="openProgress" class="progress-fill"></div></div>
+    </div>
+
+    <div id="revealStage" class="reveal-stage hidden">
+      <div id="revealCard" class="reveal-card glass">
+        <div id="revealGlow" class="reveal-glow"></div>
+        <div id="revealEmoji" class="reveal-emoji">🍕</div>
+        <div id="revealRarity" class="reveal-badge">RARE</div>
+        <div id="revealName" class="reveal-name">Food Name</div>
+        <div id="revealValue" class="reveal-value">Sell for $0</div>
+      </div>
+      <button id="collectBtn" class="collect">Collect →</button>
+      <p style="font-size:12px;opacity:.5;margin-top:12px">Added to inventory</p>
+    </div>
+    <canvas id="confettiCanvas" class="confetti"></canvas>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
