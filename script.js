@@ -25,16 +25,31 @@ const foodData = [
   {id:'voidburger', name:'Void Burger', emoji:'🕳️', value:25000, rarity:'mythic'},
   {id:'infinityramen', name:'Infinity Ramen', emoji:'♾️', value:30000, rarity:'mythic'},
   {id:'starfruit', name:'Starfruit Supreme', emoji:'⭐', value:40000, rarity:'mythic'},
+{id:'pineapplepizza', name:'Pineapple Pizza', emoji:'🍍', value:95, rarity:'uncommon', summer:true},
+  {id:'coconutice', name:'Coconut Ice Cream', emoji:'🥥', value:380, rarity:'rare', summer:true},
+  {id:'beachbbq', name:'Beach BBQ Ribs', emoji:'🍖', value:1600, rarity:'epic', summer:true},
+  {id:'watermelon', name:'Watermelon Slushie', emoji:'🍉', value:6500, rarity:'legendary', summer:true},
+  {id:'solarflare', name:'Solar Flare Burger', emoji:'🌞', value:35000, rarity:'mythic', summer:true},
 ];
 
-const byRarity = {
+// rebuild after summer foods added
+const rebuildRarity = () => ({
+  common: foodData.filter(f=>f.rarity==='common' && (!f.summer || isSummerEvent)),
+  uncommon: foodData.filter(f=>f.rarity==='uncommon' && (!f.summer || isSummerEvent)),
+  rare: foodData.filter(f=>f.rarity==='rare' && (!f.summer || isSummerEvent)),
+  epic: foodData.filter(f=>f.rarity==='epic' && (!f.summer || isSummerEvent)),
+  legendary: foodData.filter(f=>f.rarity==='legendary' && (!f.summer || isSummerEvent)),
+  mythic: foodData.filter(f=>f.rarity==='mythic' && (!f.summer || isSummerEvent)),
+});
+let byRarity = rebuildRarity();
+/* original
   common: foodData.filter(f=>f.rarity==='common'),
   uncommon: foodData.filter(f=>f.rarity==='uncommon'),
   rare: foodData.filter(f=>f.rarity==='rare'),
   epic: foodData.filter(f=>f.rarity==='epic'),
   legendary: foodData.filter(f=>f.rarity==='legendary'),
   mythic: foodData.filter(f=>f.rarity==='mythic'),
-};
+};*/
 
 const rarityConfig = {
   common:{name:'Common', color:'#9ca3af', class:'rarity-common'},
@@ -50,6 +65,18 @@ const boxes = {
   lucky:{key:'lucky', name:'Lucky Box', price:250, emoji:'🎁', color:'linear-gradient(90deg,#059669,#0d9488)', odds:{common:40, uncommon:35, rare:20, epic:4, legendary:1}},
   golden:{key:'golden', name:'Golden Feast', price:1000, emoji:'👑', color:'linear-gradient(90deg,#f59e0b,#ea580c)', odds:{common:10, uncommon:25, rare:35, epic:20, legendary:8, mythic:2}},
 };
+
+const SUMMER_END = new Date('2026-06-20T23:59:59Z').getTime();
+const isSummerEvent = Date.now() < SUMMER_END;
+
+// v0.0.1 changes
+if(isSummerEvent){
+  boxes.basic.price = 40; // event discount
+  boxes.golden.odds = {common:9.5, uncommon:25, rare:35, epic:20, legendary:8, mythic:2.5};
+  boxes.summer = {key:'summer', name:'Summer Box', price:175, emoji:'🏖️', color:'linear-gradient(90deg,#f97316,#eab308)', odds:{common:30, uncommon:35, rare:25, epic:7, legendary:2.5, mythic:0.5}, summer:true};
+  // replace lucky with summer during event
+  delete boxes.lucky;
+}
 
 let state = { money:0, clickLevel:0, autoLevel:0, luckLevel:0, totalClicks:0, totalEarned:0, boxesOpened:0, inventory:{}, rarest:'common' };
 state.clickValue = 1;
@@ -87,6 +114,8 @@ function rollFood(box){
   for(const [rar,ch] of Object.entries(odds)){ if(r<ch){chosen=rar;break;} r-=ch; }
   const order=['common','uncommon','rare','epic','legendary','mythic']; let idx=order.indexOf(chosen);
   for(let i=0;i<state.luckLevel;i++){ if(Math.random()<0.05 && idx<order.length-1){ const next=order[idx+1]; if(box.odds[next]||next==='mythic'||next==='legendary'){ idx++; } } }
+  // v0.0.1 summer +15% boost
+  if(isSummerEvent){ for(let i=0;i<3;i++){ if(Math.random()<0.05 && idx<order.length-1) idx++; } }
   chosen=order[idx]; if(!byRarity[chosen]||byRarity[chosen].length===0) chosen='common';
   const pool=byRarity[chosen]; const pick=pool[Math.floor(Math.random()*pool.length)]; return {...pick};
 }
@@ -136,7 +165,7 @@ $('sellAllBtn').onclick=()=>{ let total=0; for(const [id,cnt] of Object.entries(
 $('sellDupBtn').onclick=()=>{ let total=0; for(const [id,cnt] of Object.entries(state.inventory)){ if(cnt>1){ const f=foodData.find(x=>x.id===id); const sell=cnt-1; total+=f.value*sell; state.inventory[id]=1; } } if(total===0){ beep(200,0.1,0.05); return;} state.money+=total; state.totalEarned+=total; beep(720,0.1,0.08); updateInventory(); updateUI(); save(); };
 
 const upgrades=[
-  {key:'click',name:'Better Click',desc:'+$1 per click',icon:'👆',base:50,mult:1.6,get:()=>state.clickLevel,apply:()=>{state.clickLevel++;state.clickValue=1+state.clickLevel}},
+  {key:'click',name:'Better Click',desc:'+$1 per click',icon:'👆',base:45,mult:1.6,get:()=>state.clickLevel,apply:()=>{state.clickLevel++;state.clickValue=1+state.clickLevel}},
   {key:'auto',name:'Auto Clicker',desc:'+1 click/sec',icon:'⚙️',base:200,mult:1.85,get:()=>state.autoLevel,apply:()=>{state.autoLevel++}},
   {key:'luck',name:'Luck Boost',desc:'+5% upgrade chance',icon:'🍀',base:500,mult:2.25,get:()=>state.luckLevel,apply:()=>{state.luckLevel++}},
 ];
@@ -175,6 +204,7 @@ loop();
 setInterval(()=>{ if(state.autoLevel>0){ const gain=state.autoLevel*state.clickValue; state.money+=gain; state.totalEarned+=gain; if(Math.random()<0.4){ const p=document.createElement('div'); p.className='particle'; p.textContent='+'+gain; p.style.color='#7dd3fc'; p.style.fontSize='14px'; p.style.top='20%'; p.style.transform=`translateX(-50%) translateX(${(Math.random()-0.5)*60}px)`; $('particleContainer').appendChild(p); setTimeout(()=>p.remove(),800); } updateUI(); } },1000);
 
 function updateUI(){
+  if(isSummerEvent && !$('summerBanner')){ const b=document.createElement('div'); b.id='summerBanner'; b.innerHTML=`🌞 SUMMER EVENT - ${Math.max(0, Math.ceil((SUMMER_END-Date.now())/86400000))} days left!`; b.style.cssText='position:fixed;top:68px;left:50%;transform:translateX(-50%);background:linear-gradient(90deg,#f97316,#eab308);padding:6px 16px;border-radius:999px;font-weight:800;font-size:12px;z-index:50;box-shadow:0 4px 20px rgba(249,115,22,.4)'; document.body.appendChild(b); const coin=$('coinBtn').querySelector('div'); if(coin) coin.style.background='radial-gradient(circle at 30% 25%,#fff7c2 0%,#fde68a 15%,#fbbf24 35%,#f97316 60%,#ea580c 85%,#c2410c 100%)'; }
   $('perClickDisplay').textContent='+'+fmt(state.clickValue).slice(1);
   $('autoDisplay').textContent=state.autoLevel?`${state.autoLevel*state.clickValue}/sec`:'0/sec';
   $('clickCount').textContent=state.totalClicks.toLocaleString();
@@ -190,4 +220,4 @@ updateInventory(); updateUI(); displayMoney=state.money; setInterval(save,4000);
 $('resetBtn').onclick=()=>{ if(confirm('Reset ALL progress? This cannot be undone.')){ localStorage.removeItem('foodClicker_v2'); location.reload(); } };
 
 let lastTouch=0; document.addEventListener('touchend',e=>{ const now=Date.now(); if(now-lastTouch<300) e.preventDefault(); lastTouch=now; },{passive:false});
-window.addEventListener('keydown',e=>{ if(e.code==='Space'){ e.preventDefault(); $('coinBtn').dispatchEvent(new PointerEvent('pointerdown')); } if(e.key.toLowerCase()==='b') buyBox('basic'); if(e.key.toLowerCase()==='l') buyBox('lucky'); if(e.key.toLowerCase()==='g') buyBox('golden'); });
+window.addEventListener('keydown',e=>{ if(e.code==='Space'){ e.preventDefault(); $('coinBtn').dispatchEvent(new PointerEvent('pointerdown')); } if(e.key.toLowerCase()==='b') buyBox('basic'); if(e.key.toLowerCase()==='l') buyBox(isSummerEvent ? 'summer' : 'lucky'); if(e.key.toLowerCase()==='g') buyBox('golden'); });
