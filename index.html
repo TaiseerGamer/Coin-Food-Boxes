@@ -1,18 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Coin & Food Boxes</title>
-
-  <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="orbs"><div class="orb orb1"></div><div class="orb orb2"></div></div>
 
 <header class="glass">
-  <div class="logo"><span>🍱</span> Coin & Food Boxes</div>
+  <div class="logo"><span>🍱</span> Coin & Food Boxes <small>v0.0.1</small></div>
   <div class="coins-display">
     <div class="coin-mini">$</div>
     <div id="coinCount">0</div>
@@ -21,6 +19,11 @@
     <button class="btn-small" id="resetBtn">Reset</button>
   </div>
 </header>
+
+<div id="eventBanner" class="event-banner glass hidden">
+  <div class="event-left">☀️ <strong>Summer Splash Event</strong> — exclusive summer foods!</div>
+  <div class="event-right">Ends in <span id="eventTimer">7d 00:00:00</span></div>
+</div>
 
 <div class="game-wrap">
   <div class="game">
@@ -62,6 +65,15 @@
             <div class="crate-meta">10x luck</div>
           </div>
           <button class="crate-buy"><span class="price">500</span> 💰</button>
+        </div>
+        <div class="crate" data-crate="summer" id="summerCrate" style="display:none;">
+          <div class="crate-icon summer">🏖️</div>
+          <div class="crate-info">
+            <h4>Summer Crate</h4>
+            <p>5x luck, exclusive summer foods</p>
+            <div class="crate-meta">Event only • 7 days</div>
+          </div>
+          <button class="crate-buy"><span class="price">250</span> 💰</button>
         </div>
       </div>
 
@@ -115,6 +127,7 @@
     </div>
   </div>
 </div>
-  <script src="script.js"></script>
+
+<script src="script.js"></script>
 </body>
 </html>

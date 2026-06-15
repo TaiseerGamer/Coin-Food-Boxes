@@ -1,8 +1,22 @@
 const $ = id => document.getElementById(id);
+const EVENT = {
+  version: '0.0.1',
+  name: 'Summer Splash',
+  endTime: new Date('2026-06-22T23:59:59+03:00').getTime()
+};
+const SUMMER_RARITIES = [
+  {id:'common', name:'Common', weight:50, color:'#fbbf24', items:[{emoji:'🍦',name:'Ice Cream'},{emoji:'🍉',name:'Watermelon'}]},
+  {id:'uncommon', name:'Uncommon', weight:28, color:'#22c55e', items:[{emoji:'🍹',name:'Tropical Drink'},{emoji:'🌽',name:'Grilled Corn'}]},
+  {id:'rare', name:'Rare', weight:14, color:'#38bdf8', items:[{emoji:'🍍',name:'Pineapple'},{emoji:'🥥',name:'Coconut'}]},
+  {id:'epic', name:'Epic', weight:6, color:'#a855f7', items:[{emoji:'🍧',name:'Shaved Ice'},{emoji:'🦐',name:'Shrimp Skewer'}]},
+  {id:'legendary', name:'Legendary', weight:1.7, color:'#f59e0b', items:[{emoji:'🏖️',name:'Beach Burger'}]},
+  {id:'mythic', name:'Mythic', weight:0.3, color:'#ec4899', items:[{emoji:'🌞',name:'Sun God Popsicle'}]}
+];
 const CRATES = {
   basic:{cost:10,luck:1,name:'Basic Crate',icon:'📦',class:'basic'},
   lucky:{cost:100,luck:3,name:'Lucky Crate',icon:'🧰',class:'lucky'},
-  mega:{cost:500,luck:10,name:'Mega Crate',icon:'💎',class:'mega'}
+  mega:{cost:500,luck:10,name:'Mega Crate',icon:'💎',class:'mega'},
+  summer:{cost:250,luck:5,name:'Summer Crate',icon:'🏖️',class:'summer'}
 };
 const RARITIES = [
   {id:'common', name:'Common', weight:60, color:'#9ca3af', items:[{emoji:'🍞',name:'Bread'},{emoji:'🍎',name:'Apple'}]},
@@ -18,6 +32,8 @@ let state = {
   upgrades:{click:0, auto:0},
   inventory:{}
 };
+
+function isEventActive(){ return Date.now() < EVENT.endTime; }
 
 let audioCtx;
 function initAudio(){ if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }
@@ -44,20 +60,40 @@ function load(){
 
 function format(n){ return n>=1e6? (n/1e6).toFixed(1)+'M' : n>=1e3? (n/1e3).toFixed(1)+'k' : Math.floor(n).toLocaleString(); }
 
+function updateEventUI(){
+  const active = isEventActive();
+  const banner = $('eventBanner');
+  const summerEl = $('summerCrate');
+  if(banner) banner.classList.toggle('hidden', !active);
+  if(summerEl) summerEl.style.display = active ? 'flex' : 'none';
+  if(active){
+    const diff = EVENT.endTime - Date.now();
+    if(diff > 0){
+      const d = Math.floor(diff/86400000);
+      const h = Math.floor(diff%86400000/3600000).toString().padStart(2,'0');
+      const m = Math.floor(diff%3600000/60000).toString().padStart(2,'0');
+      const s = Math.floor(diff%60000/1000).toString().padStart(2,'0');
+      $('eventTimer').textContent = `${d}d ${h}:${m}:${s}`;
+    } else {
+      $('eventTimer').textContent = 'Ended';
+    }
+  }
+}
+
 function updateUI(){
   $('coinCount').textContent = format(state.coins);
   $('perClick').textContent = state.perClick;
   $('statClicks').textContent = format(state.clicks);
   $('statEarned').textContent = format(state.totalEarned);
   $('statBoxes').textContent = state.boxesOpened;
-  $('statBest').textContent = state.bestPull!==null? RARITIES[state.bestPull].name : '-';
+  $('statBest').textContent = state.bestPull!==null ? RARITIES[state.bestPull].name : '-';
   if(state.bestPull!==null) $('statBest').style.color = RARITIES[state.bestPull].color;
 
   document.querySelectorAll('.crate').forEach(el=>{
     const type = el.dataset.crate;
     const c = CRATES[type];
     const can = state.coins >= c.cost;
-    el.classList.toggle('disabled',!can);
+    el.classList.toggle('disabled', !can);
     el.querySelector('.price').textContent = c.cost;
   });
 
@@ -70,21 +106,25 @@ function updateUI(){
   $('buyClick').disabled = state.coins < clickCost;
   $('buyAuto').textContent = autoCost+' 💰';
   $('buyAuto').disabled = state.coins < autoCost;
+  $('upClick').classList.toggle('disabled', state.coins < clickCost);
+  $('upAuto').classList.toggle('disabled', state.coins < autoCost);
 
   renderInventory();
+  updateEventUI();
 }
 
 function renderInventory(){
   const grid = $('inventoryGrid');
-  grid.innerHTML='';
-  const items = Object.values(state.inventory).sort((a,b)=>b.rarityIdx - a.rarityIdx);
-  $('collectionCount').textContent = items.length? `(${items.length}/10)` : '';
-  if(!items.length){ grid.innerHTML='<div class="empty-inv">Open crates to collect foods!</div>'; return; }
+  grid.innerHTML = '';
+  const items = Object.values(state.inventory).sort((a,b)=> b.rarityIdx - a.rarityIdx || a.name.localeCompare(b.name));
+  $('collectionCount').textContent = `(${items.length}/${RARITIES.reduce((s,r)=>s+r.items.length,0)})`;
+  if(items.length===0){ grid.innerHTML='<div class="empty-inv">Open crates to collect foods!</div>'; return; }
   items.forEach(it=>{
-    const div=document.createElement('div');
+    const div = document.createElement('div');
     div.className='inv-item';
-    div.style.borderColor = RARITIES[it.rarityIdx].color+'55';
-    div.innerHTML = `<div class="inv-emoji">${it.emoji}</div><div class="inv-name">${it.name}</div><div class="inv-count">x${it.count}</div>${it.new?'<div class="new-badge">NEW</div>':''}`;
+    div.style.borderColor = RARITIES[it.rarityIdx].color;
+    div.style.boxShadow = `0 0 15px ${RARITIES[it.rarityIdx].color}30`;
+    div.innerHTML = `<div class="inv-emoji">${it.emoji}</div><div class="inv-name">${it.name}</div><div class="inv-count">x${it.count}</div>${it.new?'<div class="new-badge">NEW!</div>':''}`;
     grid.appendChild(div);
   });
 }
@@ -94,7 +134,7 @@ function handleClick(e){
   state.clicks++;
   state.coins += state.perClick;
   state.totalEarned += state.perClick;
-  $('coinCount').classList.add('pulse'); setTimeout(()=>$('coinCount').classList.remove('pulse'),250);
+  $('coinCount').classList.add('pulse'); setTimeout(()=>$('coinCount').classList.remove('pulse'),300);
   $('bigCoin').classList.add('clicked'); setTimeout(()=>$('bigCoin').classList.remove('clicked'),100);
   popSound();
   showFloat('+'+state.perClick);
@@ -136,7 +176,7 @@ function buyCrate(type){
 }
 
 function pickFood(luck){
-  const weights = RARITIES.map((r,i)=> i>=2? r.weight*luck : r.weight);
+  const weights = RARITIES.map((r,i)=> i>=2 ? r.weight*luck : r.weight);
   const total = weights.reduce((a,b)=>a+b,0);
   let rnd = Math.random()*total;
   let idx=0;
@@ -180,7 +220,8 @@ function openCrate(crate){
   reveal.classList.add('hidden');
   particles=[];
 
-  const result = pickFood(crate.luck);
+  const isSummer = crate.class === 'summer';
+  const result = pickFood(crate.luck, isSummer);
 
   setTimeout(()=>{
     crateAnim.classList.remove('shaking');
@@ -202,7 +243,7 @@ function openCrate(crate){
     $('revealRarity').textContent = result.rarity.name;
     $('revealRarity').style.color = result.rarity.color;
     $('revealRarity').style.textShadow = `0 0 20px ${result.rarity.color}`;
-    $('revealRarity').className = result.idx===5? 'mythic-text' : '';
+    $('revealRarity').className = result.idx===5 ? 'mythic-text' : '';
     reveal.classList.remove('hidden');
 
     // add to inventory
@@ -218,7 +259,7 @@ function openCrate(crate){
 }
 
 $('modal').addEventListener('click', e=>{
-  if(e.target.classList.contains('modal-bg') ||!e.target.closest('.open-stage') ||!$('reveal').classList.contains('hidden')){
+  if(e.target.classList.contains('modal-bg') || !e.target.closest('.open-stage') || !$('reveal').classList.contains('hidden')){
     $('modal').classList.remove('active');
   }
 });
@@ -256,6 +297,8 @@ $('resetBtn').addEventListener('click', ()=>{
 load();
 updateUI();
 setInterval(save,5000);
+setInterval(updateEventUI,1000); // update countdown
+
 
 // prevent double-tap zoom on iOS
 let lastTouch=0;
