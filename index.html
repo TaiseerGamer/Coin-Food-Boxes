@@ -1,131 +1,120 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
-<title>Food Coin Clicker - Simulator</title>
-<link rel="stylesheet" href="style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Coin & Food Boxes</title>
+
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="app">
-  <header class="header">
-    <div class="header-inner">
-      <div class="brand">
-        <div class="logo">🍔</div>
-        <div>
-          <div class="title">Food Coin Clicker</div>
-          <div class="subtitle">Roblox-style simulator</div>
-        </div>
-      <div class="balance-wrap">
-        <div class="balance glass">
-          <div class="balance-label">Balance</div>
-          <div id="moneyDisplay" class="balance-value">$0</div>
-        </div>
-        <button id="resetBtn" class="reset glass" title="Reset">↺</button>
+<div class="orbs"><div class="orb orb1"></div><div class="orb orb2"></div></div>
+
+<header class="glass">
+  <div class="logo"><span>🍱</span> Coin & Food Boxes</div>
+  <div class="coins-display">
+    <div class="coin-mini">$</div>
+    <div id="coinCount">0</div>
+  </div>
+  <div class="header-btns">
+    <button class="btn-small" id="resetBtn">Reset</button>
+  </div>
+</header>
+
+<div class="game-wrap">
+  <div class="game">
+    <div class="left-panel panel glass">
+      <h2>💰 Click the Coin</h2>
+      <div class="coin-wrap" id="coinWrap">
+        <div class="coin-glow"></div>
+        <div id="bigCoin" class="big-coin">$</div>
       </div>
+      <div class="click-power">+<span id="perClick">1</span> per click</div>
     </div>
-  </header>
 
-  <main class="main">
-    <aside class="panel glass left">
-      <div class="panel-head">
-        <h2 class="panel-title">🎒 Inventory</h2>
-        <span id="inventoryValue" class="badge">$0</span>
-      </div>
-      <div class="actions">
-        <button id="sellAllBtn" class="btn btn-primary">Sell All</button>
-        <button id="sellDupBtn" class="btn btn-ghost">Dupes</button>
-      </div>
-      <div id="inventoryGrid" class="inventory"></div>
-      <div class="stats">
-        <h3 class="stats-title">Stats</h3>
-        <div class="stats-grid">
-          <div class="stat"><div class="stat-label">Clicks</div><div id="statClicks" class="stat-value">0</div></div>
-          <div class="stat"><div class="stat-label">Earned</div><div id="statEarned" class="stat-value">$0</div></div>
-          <div class="stat"><div class="stat-label">Boxes</div><div id="statBoxes" class="stat-value">0</div></div>
-          <div class="stat"><div class="stat-label">Rarest</div><div id="statRarest" class="stat-value">-</div></div>
-        </div>
-      </div>
-    </aside>
-
-    <section class="center">
-      <div class="coin-wrap">
-        <div class="glow1"></div>
-        <div class="glow2"></div>
-        <button id="coinBtn" class="coin coin-btn no-select">
-          <div class="coin-shine"></div>
-          <div class="coin-inner">
-            <div class="coin-dollar">$</div>
-            <div class="coin-text">CLICK</div>
+    <div class="right-panel panel glass">
+      <h2>📦 Crates</h2>
+      <div id="crates">
+        <div class="crate" data-crate="basic">
+          <div class="crate-icon basic">📦</div>
+          <div class="crate-info">
+            <h4>Basic Crate</h4>
+            <p>Better than nothing</p>
+            <div class="crate-meta">1x luck</div>
           </div>
-        </button>
-        <div id="particleContainer" style="position:absolute;inset:0;pointer-events:none;z-index:20"></div>
-      </div>
-      <div class="info">
-        <div class="pill glass">
-          <div>
-            <div class="info-label">Per Click</div>
-            <div id="perClickDisplay" class="info-val">+$1</div>
+          <button class="crate-buy"><span class="price">10</span> 💰</button>
+        </div>
+        <div class="crate" data-crate="lucky">
+          <div class="crate-icon lucky">🧰</div>
+          <div class="crate-info">
+            <h4>Lucky Crate</h4>
+            <p>3x better odds</p>
+            <div class="crate-meta">3x luck</div>
           </div>
-          <div class="divider"></div>
-          <div>
-            <div class="info-label">Auto</div>
-            <div id="autoDisplay" class="info-val2">0/sec</div>
+          <button class="crate-buy"><span class="price">100</span> 💰</button>
+        </div>
+        <div class="crate" data-crate="mega">
+          <div class="crate-icon mega">💎</div>
+          <div class="crate-info">
+            <h4>Mega Crate</h4>
+            <p>10x luck, mythic chance!</p>
+            <div class="crate-meta">10x luck</div>
           </div>
-        <div class="total">
-          <span class="total-badge">Total: <b id="clickCount" style="color:white">0</b></span>
+          <button class="crate-buy"><span class="price">500</span> 💰</button>
         </div>
       </div>
-    </section>
 
-    <aside class="panel glass right">
-      <div class="panel-head">
-        <h2 class="panel-title">🛒 Food Boxes</h2>
-        <span class="badge" style="background:rgba(124,58,237,.2);color:#c4b5fd">Shop</span>
+      <h3>⚡ Upgrades</h3>
+      <div id="upgrades">
+        <div class="upgrade" id="upClick">
+          <div class="up-info">
+            <strong>Better Click</strong>
+            <small>Level <span id="clickLvl">0</span> • +1 per click</small>
+          </div>
+          <button class="up-buy" id="buyClick">50 💰</button>
+        </div>
+        <div class="upgrade" id="upAuto">
+          <div class="up-info">
+            <strong>Auto Clicker</strong>
+            <small>Level <span id="autoLvl">0</span> • <span id="autoRate">0</span>/sec</small>
+          </div>
+          <button class="up-buy" id="buyAuto">200 💰</button>
+        </div>
       </div>
-      <div id="shopContainer" class="shop"></div>
-      <p style="font-size:11px;opacity:.5;margin-top:12px;text-align:center">Tap a box to open • Hover for odds</p>
-    </aside>
-  </main>
-
-  <section class="upgrades">
-    <div class="panel glass">
-      <div class="panel-head" style="margin-bottom:16px">
-        <h2 class="panel-title">⚡ Upgrades</h2>
-        <div style="font-size:11px;opacity:.6">Permanent boosts</div>
-      </div>
-      <div id="upgradesContainer" class="up-grid"></div>
     </div>
-  </section>
-</div>
-
-<div id="openModal" class="modal hidden">
-  <div class="modal-content">
-    <div id="boxStage" class="box-stage">
-      <div style="position:relative">
-        <div style="position:absolute;inset:0;filter:blur(48px);opacity:.6;background:#7c3aed;border-radius:50%;transform:scale(1.5)"></div>
-        <div id="openingBox" class="opening-box">📦</div>
-      </div>
-      <div id="openingText" class="opening-text">Opening...</div>
-      <div id="sparkles" class="sparkles"></div>
-      <div class="progress"><div id="openProgress" class="progress-fill"></div></div>
-    </div>
-
-    <div id="revealStage" class="reveal-stage hidden">
-      <div id="revealCard" class="reveal-card glass">
-        <div id="revealGlow" class="reveal-glow"></div>
-        <div id="revealEmoji" class="reveal-emoji">🍕</div>
-        <div id="revealRarity" class="reveal-badge">RARE</div>
-        <div id="revealName" class="reveal-name">Food Name</div>
-        <div id="revealValue" class="reveal-value">Sell for $0</div>
-      </div>
-      <button id="collectBtn" class="collect">Collect →</button>
-      <p style="font-size:12px;opacity:.5;margin-top:12px">Added to inventory</p>
-    </div>
-    <canvas id="confettiCanvas" class="confetti"></canvas>
   </div>
 </div>
 
-<script src="script.js"></script>
+<div class="bottom">
+  <div class="stats panel glass">
+    <h2>📊 Stats</h2>
+    <div class="stats-grid">
+      <div class="stat"><div class="stat-label">Total Clicks</div><div class="stat-value" id="statClicks">0</div></div>
+      <div class="stat"><div class="stat-label">Coins Earned</div><div class="stat-value" id="statEarned">0</div></div>
+      <div class="stat"><div class="stat-label">Boxes Opened</div><div class="stat-value" id="statBoxes">0</div></div>
+      <div class="stat"><div class="stat-label">Best Pull</div><div class="stat-value" id="statBest">-</div></div>
+    </div>
+  </div>
+
+  <div class="inventory panel glass">
+    <h2>🎒 Collection <span id="collectionCount" style="opacity:0.6;font-size:14px;font-weight:500;"></span></h2>
+    <div class="inv-grid" id="inventoryGrid"></div>
+  </div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="modal-bg"></div>
+  <div class="open-stage">
+    <canvas id="confetti"></canvas>
+    <div id="crateAnim" class="crate-large"></div>
+    <div id="reveal" class="reveal hidden">
+      <div id="revealEmoji"></div>
+      <div id="revealName"></div>
+      <div id="revealRarity"></div>
+    </div>
+  </div>
+</div>
+  <script src="script.js"></script>
 </body>
 </html>

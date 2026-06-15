@@ -1,219 +1,262 @@
 const $ = id => document.getElementById(id);
-
-const foodData = [
-  {id:'bread', name:'Bread', emoji:'🍞', value:10, rarity:'common'},
-  {id:'apple', name:'Apple', emoji:'🍎', value:12, rarity:'common'},
-  {id:'carrot', name:'Carrot', emoji:'🥕', value:15, rarity:'common'},
-  {id:'banana', name:'Banana', emoji:'🍌', value:18, rarity:'common'},
-  {id:'pizza', name:'Pizza Slice', emoji:'🍕', value:50, rarity:'uncommon'},
-  {id:'burger', name:'Burger', emoji:'🍔', value:60, rarity:'uncommon'},
-  {id:'sushi', name:'Sushi', emoji:'🍣', value:70, rarity:'uncommon'},
-  {id:'taco', name:'Taco', emoji:'🌮', value:80, rarity:'uncommon'},
-  {id:'ramen', name:'Ramen', emoji:'🍜', value:200, rarity:'rare'},
-  {id:'steak', name:'Steak', emoji:'🥩', value:250, rarity:'rare'},
-  {id:'lobster', name:'Lobster', emoji:'🦞', value:300, rarity:'rare'},
-  {id:'donut', name:'Donut Tower', emoji:'🍩', value:350, rarity:'rare'},
-  {id:'goldburger', name:'Golden Burger', emoji:'👑', value:800, rarity:'epic'},
-  {id:'rainbowcake', name:'Rainbow Cake', emoji:'🎂', value:1000, rarity:'epic'},
-  {id:'dragonfruit', name:'Dragon Fruit', emoji:'🐉', value:1200, rarity:'epic'},
-  {id:'truffle', name:'Truffle Pasta', emoji:'🍝', value:1500, rarity:'epic'},
-  {id:'phoenix', name:'Phoenix Egg', emoji:'🥚', value:4000, rarity:'legendary'},
-  {id:'crystal', name:'Crystal Sushi', emoji:'💎', value:5000, rarity:'legendary'},
-  {id:'galaxy', name:'Galaxy Donut', emoji:'🌌', value:6000, rarity:'legendary'},
-  {id:'diamondsteak', name:'Diamond Steak', emoji:'✨', value:7500, rarity:'legendary'},
-  {id:'cosmicpizza', name:'Cosmic Pizza', emoji:'🌠', value:20000, rarity:'mythic'},
-  {id:'voidburger', name:'Void Burger', emoji:'🕳️', value:25000, rarity:'mythic'},
-  {id:'infinityramen', name:'Infinity Ramen', emoji:'♾️', value:30000, rarity:'mythic'},
-  {id:'starfruit', name:'Starfruit Supreme', emoji:'⭐', value:40000, rarity:'mythic'},
-  {id:'pineapplepizza', name:'Pineapple Pizza', emoji:'🍍', value:95, rarity:'uncommon', summer:true},
-  {id:'coconutice', name:'Coconut Ice Cream', emoji:'🥥', value:380, rarity:'rare', summer:true},
-  {id:'beachbbq', name:'Beach BBQ Ribs', emoji:'🍖', value:1600, rarity:'epic', summer:true},
-  {id:'watermelon', name:'Watermelon Slushie', emoji:'🍉', value:6500, rarity:'legendary', summer:true},
-  {id:'solarflare', name:'Solar Flare Burger', emoji:'🌞', value:35000, rarity:'mythic', summer:true},
+const CRATES = {
+  basic:{cost:10,luck:1,name:'Basic Crate',icon:'📦',class:'basic'},
+  lucky:{cost:100,luck:3,name:'Lucky Crate',icon:'🧰',class:'lucky'},
+  mega:{cost:500,luck:10,name:'Mega Crate',icon:'💎',class:'mega'}
+};
+const RARITIES = [
+  {id:'common', name:'Common', weight:60, color:'#9ca3af', items:[{emoji:'🍞',name:'Bread'},{emoji:'🍎',name:'Apple'}]},
+  {id:'uncommon', name:'Uncommon', weight:25, color:'#22c55e', items:[{emoji:'🍔',name:'Burger'},{emoji:'🍕',name:'Pizza'}]},
+  {id:'rare', name:'Rare', weight:10, color:'#3b82f6', items:[{emoji:'🍣',name:'Sushi'},{emoji:'🌮',name:'Taco'}]},
+  {id:'epic', name:'Epic', weight:4, color:'#a855f7', items:[{emoji:'🍜',name:'Ramen'},{emoji:'🥩',name:'Steak'}]},
+  {id:'legendary', name:'Legendary', weight:0.9, color:'#f59e0b', items:[{emoji:'🍩',name:'Golden Donut'}]},
+  {id:'mythic', name:'Mythic', weight:0.1, color:'#ec4899', items:[{emoji:'🍰',name:'Rainbow Cake'}]}
 ];
 
-const SUMMER_END = new Date('2026-06-20T23:59:59Z').getTime();
-const isSummerEvent = Date.now() < SUMMER_END;
-
-const byRarity = {
-  common: foodData.filter(f=>f.rarity==='common' && (!f.summer || isSummerEvent)),
-  uncommon: foodData.filter(f=>f.rarity==='uncommon' && (!f.summer || isSummerEvent)),
-  rare: foodData.filter(f=>f.rarity==='rare' && (!f.summer || isSummerEvent)),
-  epic: foodData.filter(f=>f.rarity==='epic' && (!f.summer || isSummerEvent)),
-  legendary: foodData.filter(f=>f.rarity==='legendary' && (!f.summer || isSummerEvent)),
-  mythic: foodData.filter(f=>f.rarity==='mythic' && (!f.summer || isSummerEvent)),
+let state = {
+  coins:0, totalEarned:0, clicks:0, perClick:1, boxesOpened:0, bestPull:null,
+  upgrades:{click:0, auto:0},
+  inventory:{}
 };
-
-const rarityConfig = {
-  common:{name:'Common', color:'#9ca3af', class:'rarity-common'},
-  uncommon:{name:'Uncommon', color:'#22c55e', class:'rarity-uncommon'},
-  rare:{name:'Rare', color:'#3b82f6', class:'rarity-rare'},
-  epic:{name:'Epic', color:'#a855f7', class:'rarity-epic'},
-  legendary:{name:'Legendary', color:'#f97316', class:'rarity-legendary'},
-  mythic:{name:'Mythic', color:'#ec4899', class:'rarity-mythic'},
-};
-
-const boxes = {
-  basic:{key:'basic', name:'Basic Box', price:50, emoji:'📦', color:'linear-gradient(90deg,#52525b,#27272a)', odds:{common:70, uncommon:25, rare:5}},
-  lucky:{key:'lucky', name:'Lucky Box', price:250, emoji:'🎁', color:'linear-gradient(90deg,#059669,#0d9488)', odds:{common:40, uncommon:35, rare:20, epic:4, legendary:1}},
-  golden:{key:'golden', name:'Golden Feast', price:1000, emoji:'👑', color:'linear-gradient(90deg,#f59e0b,#ea580c)', odds:{common:10, uncommon:25, rare:35, epic:20, legendary:8, mythic:2}},
-};
-
-// v0.0.1 Summer Event adjustments
-if(isSummerEvent){
-  boxes.basic.price = 40;
-  boxes.golden.odds = {common:9.5, uncommon:25, rare:35, epic:20, legendary:8, mythic:2.5};
-  boxes.summer = {key:'summer', name:'Summer Box', price:175, emoji:'🏖️', color:'linear-gradient(90deg,#f97316,#eab308)', odds:{common:30, uncommon:35, rare:25, epic:7, legendary:2.5, mythic:0.5}};
-  delete boxes.lucky;
-}
-
-let state = { money:0, clickLevel:0, autoLevel:0, luckLevel:0, totalClicks:0, totalEarned:0, boxesOpened:0, inventory:{}, rarest:'common' };
-state.clickValue = 1;
 
 let audioCtx;
-function initAudio(){ if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)(); if(audioCtx.state==='suspended') audioCtx.resume(); }
-function beep(freq=800, dur=0.08, vol=0.07, type='sine'){ try{ initAudio(); const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type=type; o.frequency.value=freq; o.connect(g); g.connect(audioCtx.destination); g.gain.setValueAtTime(vol, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime+dur); o.start(); o.stop(audioCtx.currentTime+dur);}catch(e){} }
+function initAudio(){ if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }
+function beep(freq,dur=0.08,type='sine',vol=0.15){
+  if(!audioCtx) return;
+  const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+  o.type=type; o.frequency.value=freq; o.connect(g); g.connect(audioCtx.destination);
+  g.gain.setValueAtTime(vol, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+dur);
+  o.start(); o.stop(audioCtx.currentTime+dur);
+}
+function popSound(){ beep(900,0.04,'square',0.12); setTimeout(()=>beep(500,0.06,'sine',0.1),40); }
+function openSound(){ beep(600,0.08); setTimeout(()=>beep(800,0.1),80); }
+function legendarySound(){ [523,659,784,1046,1318].forEach((f,i)=>setTimeout(()=>beep(f,0.14,'sawtooth',0.18),i*110)); }
+function mythicSound(){ [659,784,988,1318,1567,1975].forEach((f,i)=>setTimeout(()=>beep(f,0.12,'triangle',0.2),i*90)); }
 
-function save(){ localStorage.setItem('foodClicker_v2', JSON.stringify(state)); }
-function load(){ const s=localStorage.getItem('foodClicker_v2'); if(s){ const data=JSON.parse(s); state={...state,...data}; } state.clickValue=1+(state.clickLevel||0); state.clickLevel=state.clickLevel||0; state.autoLevel=state.autoLevel||0; state.luckLevel=state.luckLevel||0; }
-load();
-
-const fmt = n => '$'+Math.floor(n).toLocaleString();
-
-$('coinBtn').addEventListener('pointerdown', (e)=>{
-  e.preventDefault(); initAudio();
-  const gain = state.clickValue;
-  state.money += gain; state.totalEarned += gain; state.totalClicks++;
-  beep(720+Math.random()*180, 0.06, 0.065, 'square');
-  if(state.totalClicks % 10 === 0) beep(900,0.05,'sine');
-  for(let i=0;i<5;i++){ const p=document.createElement('div'); p.className='particle'; p.textContent='+'+fmt(gain).slice(1); p.style.color='#fde68a'; p.style.transform=`translateX(-50%) translateY(0) translateX(${(Math.random()-0.5)*120}px)`; p.style.animationDelay=(i*0.04)+'s'; $('particleContainer').appendChild(p); setTimeout(()=>p.remove(),900); }
-  $('coinBtn').style.transform='scale(0.93)'; setTimeout(()=>$('coinBtn').style.transform='',80);
-  updateUI(); if(state.totalClicks%3===0) save();
-},{passive:false});
-
-function buyBox(key){
-  const box=boxes[key];
-  if(state.money<box.price){ $('moneyDisplay').animate([{transform:'translateX(0)'},{transform:'translateX(-4px)'},{transform:'translateX(4px)'},{transform:'translateX(0)'}],{duration:300}); beep(200,0.12,0.08,'sawtooth'); return; }
-  state.money-=box.price; state.boxesOpened++; beep(180,0.18,0.09,'triangle');
-  const food=rollFood(box); openAnimation(box,food); updateUI(); save();
+function save(){ localStorage.setItem('coinFoodBoxes', JSON.stringify(state)); }
+function load(){
+  try{
+    const s = JSON.parse(localStorage.getItem('coinFoodBoxes'));
+    if(s) state = Object.assign(state,s);
+  }catch(e){}
 }
 
-function rollFood(box){
-  const odds=box.odds; const total=Object.values(odds).reduce((a,b)=>a+b,0); let r=Math.random()*total; let chosen='common';
-  for(const [rar,ch] of Object.entries(odds)){ if(r<ch){chosen=rar;break;} r-=ch; }
-  const order=['common','uncommon','rare','epic','legendary','mythic']; let idx=order.indexOf(chosen);
-  for(let i=0;i<state.luckLevel;i++){ if(Math.random()<0.05 && idx<order.length-1){ const next=order[idx+1]; if(box.odds[next]||next==='mythic'||next==='legendary'){ idx++; } } }
-  if(isSummerEvent){ for(let i=0;i<3;i++){ if(Math.random()<0.05 && idx<order.length-1) idx++; } }
-  chosen=order[idx]; if(!byRarity[chosen]||byRarity[chosen].length===0) chosen='common';
-  const pool=byRarity[chosen]; const pick=pool[Math.floor(Math.random()*pool.length)]; return {...pick};
-}
-
-function openAnimation(box,food){
-  $('openModal').classList.remove('hidden'); $('openModal').classList.add('flex');
-  $('boxStage').classList.remove('hidden'); $('revealStage').classList.add('hidden'); $('revealStage').classList.remove('flex');
-  $('openingBox').textContent=box.emoji; $('openingBox').classList.add('shake'); $('openingText').textContent=`Opening ${box.name}...`;
-  $('openProgress').style.animation='none'; void $('openProgress').offsetWidth; $('openProgress').style.animation='load 2.2s ease-out forwards';
-  $('sparkles').innerHTML = Array(7).fill(0).map((_,i)=>`<div class="sparkle" style="animation-delay:${i*0.12}s"></div>`).join('');
-  beep(140,1.1,0.045,'sawtooth'); setTimeout(()=>beep(220,0.2,0.06,'triangle'),400); setTimeout(()=>beep(320,0.15,0.05,'sine'),900);
-  setTimeout(()=>{ $('openingBox').classList.remove('shake'); $('boxStage').classList.add('hidden'); $('revealStage').classList.remove('hidden'); $('revealStage').classList.add('flex'); showReveal(food); },2200);
-}
-
-function showReveal(food){
-  const rc=rarityConfig[food.rarity];
-  $('revealEmoji').textContent=food.emoji; $('revealName').textContent=food.name; $('revealValue').textContent=`Sell for ${fmt(food.value)}`;
-  $('revealRarity').textContent=rc.name; $('revealRarity').className=`reveal-badge ${rc.class}`;
-  $('revealCard').className=`reveal-card glass ${rc.class}`; $('revealGlow').style.background=rc.color;
-  setTimeout(()=>{ $('revealCard').style.transform='scale(1)'; $('revealCard').style.opacity='1'; },50);
-  const pitches={common:420,uncommon:580,rare:760,epic:980,legendary:1180,mythic:1420};
-  beep(pitches[food.rarity],0.22,0.11,'sine'); if(food.rarity==='epic') setTimeout(()=>beep(pitches[food.rarity]+200,0.15,0.08),120);
-  if(['legendary','mythic'].includes(food.rarity)){ setTimeout(()=>beep(pitches[food.rarity]+300,0.18,0.09,'triangle'),140); setTimeout(()=>beep(pitches[food.rarity]+500,0.22,0.08,'sine'),300); launchConfetti(); navigator.vibrate&&navigator.vibrate([30,40,30]); }
-  state.inventory[food.id]=(state.inventory[food.id]||0)+1;
-  const order=['common','uncommon','rare','epic','legendary','mythic']; if(order.indexOf(food.rarity)>order.indexOf(state.rarest)){ state.rarest=food.rarity; }
-  updateInventory(); save();
-}
-
-$('collectBtn').onclick=()=>{ $('openModal').classList.add('hidden'); $('openModal').classList.remove('flex'); $('revealCard').style.transform='scale(0.95)'; $('revealCard').style.opacity='0'; beep(650,0.08,0.06,'sine'); };
-
-function updateInventory(){
-  const grid=$('inventoryGrid'); grid.innerHTML=''; let totalVal=0;
-  const items=Object.entries(state.inventory).map(([id,cnt])=>{ const f=foodData.find(x=>x.id===id); return {...f,count:cnt}; }).sort((a,b)=>{ const order=['mythic','legendary','epic','rare','uncommon','common']; return order.indexOf(a.rarity)-order.indexOf(b.rarity)||b.value-a.value; });
-  items.forEach(item=>{
-    totalVal+=item.value*item.count;
-    const el=document.createElement('div'); el.className=`inventory-item glass ${rarityConfig[item.rarity].class}`;
-    el.innerHTML=`<div style="font-size:26px;line-height:1">${item.emoji}</div><div style="font-size:10px;font-weight:700;opacity:.7">${item.count}×</div><div style="font-size:10px;font-weight:600">${fmt(item.value).slice(1)}</div>`;
-    el.title=`${item.name} ×${item.count} — ${fmt(item.value)} each`;
-    el.onclick=()=>{ if(state.inventory[item.id]>0){ state.inventory[item.id]--; if(state.inventory[item.id]===0) delete state.inventory[item.id]; state.money+=item.value; state.totalEarned+=item.value; beep(700,0.06,0.05); updateInventory(); updateUI(); save(); el.style.transform='scale(0.9)'; setTimeout(()=>el.style.transform='',150); } };
-    grid.appendChild(el);
-  });
-  if(items.length===0){ grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;opacity:.5;font-size:13px;padding:40px 0;line-height:1.4">No foods yet.<br>Buy your first box!</div>`; }
-  $('inventoryValue').textContent=fmt(totalVal);
-}
-
-$('sellAllBtn').onclick=()=>{ let total=0; for(const [id,cnt] of Object.entries(state.inventory)){ const f=foodData.find(x=>x.id===id); total+=f.value*cnt; } if(total===0){ beep(200,0.1,0.05); return;} state.inventory={}; state.money+=total; state.totalEarned+=total; beep(850,0.14,0.09,'triangle'); beep(1050,0.12,0.07,'sine'); updateInventory(); updateUI(); save(); };
-$('sellDupBtn').onclick=()=>{ let total=0; for(const [id,cnt] of Object.entries(state.inventory)){ if(cnt>1){ const f=foodData.find(x=>x.id===id); const sell=cnt-1; total+=f.value*sell; state.inventory[id]=1; } } if(total===0){ beep(200,0.1,0.05); return;} state.money+=total; state.totalEarned+=total; beep(720,0.1,0.08); updateInventory(); updateUI(); save(); };
-
-const upgrades=[
-  {key:'click',name:'Better Click',desc:'+$1 per click',icon:'👆',base:45,mult:1.6,get:()=>state.clickLevel,apply:()=>{state.clickLevel++;state.clickValue=1+state.clickLevel}},
-  {key:'auto',name:'Auto Clicker',desc:'+1 click/sec',icon:'⚙️',base:200,mult:1.85,get:()=>state.autoLevel,apply:()=>{state.autoLevel++}},
-  {key:'luck',name:'Luck Boost',desc:'+5% upgrade chance',icon:'🍀',base:500,mult:2.25,get:()=>state.luckLevel,apply:()=>{state.luckLevel++}},
-];
-
-function renderUpgrades(){
-  const c=$('upgradesContainer'); c.innerHTML='';
-  upgrades.forEach(u=>{
-    const lvl=u.get(); const cost=Math.floor(u.base*Math.pow(u.mult,lvl)); const can=state.money>=cost;
-    const div=document.createElement('div'); div.className='up glass';
-    div.innerHTML=`<div class="up-inner"><div class="up-left"><div class="up-icon">${u.icon}</div><div style="min-width:0"><div class="up-name">${u.name} <span class="up-lvl">Lv ${lvl}</span></div><div class="up-desc">${u.desc}</div></div></div><button class="up-btn ${can?'up-can':'up-cant'}">${fmt(cost)}</button></div>`;
-    div.querySelector('button').onclick=()=>{ if(!can){ beep(180,0.1,0.06,'sawtooth'); return;} state.money-=cost; u.apply(); beep(600+Math.random()*150,0.09,0.08,'sine'); renderUpgrades(); updateUI(); save(); };
-    c.appendChild(div);
-  });
-}
-
-function renderShop(){
-  const c=$('shopContainer'); c.innerHTML='';
-  Object.values(boxes).forEach(box=>{
-    const can=state.money>=box.price;
-    const div=document.createElement('div'); div.className='shop-item glass'+(!can?' disabled':'');
-    div.innerHTML=`<div class="shop-hover" style="background:${box.color}"></div><div class="shop-main"><div class="shop-emoji">${box.emoji}</div><div class="shop-info"><div class="shop-name">${box.name}</div><div class="shop-price">${fmt(box.price)}</div></div><div class="shop-buy">Buy</div></div><div class="shop-odds">${Object.entries(box.odds).map(([r,p])=>`<span class="odd ${rarityConfig[r].class}">${r[0]} ${p}%</span>`).join('')}</div><div class="tooltip-shop"><div style="font-weight:700;font-size:12px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;opacity:.8">Drop Rates</div>${Object.entries(box.odds).map(([r,p])=>`<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0"><span style="font-weight:500;color:${rarityConfig[r].color}">${rarityConfig[r].name}</span><span style="font-family:monospace">${p}%</span></div>`).join('')}${state.luckLevel>0?`<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.1);font-size:11px;opacity:.7">Luck ${state.luckLevel} → +${state.luckLevel*5}% upgrade rolls</div>`:''}</div>`;
-    div.onclick=()=>buyBox(box.key); c.appendChild(div);
-  });
-}
-
-function launchConfetti(){
-  const canvas=$('confettiCanvas'); const ctx=canvas.getContext('2d'); const rect=canvas.getBoundingClientRect(); canvas.width=rect.width*devicePixelRatio; canvas.height=rect.height*devicePixelRatio; ctx.scale(devicePixelRatio,devicePixelRatio); const W=rect.width,H=rect.height;
-  const pieces=Array.from({length:140},()=>({x:W/2+(Math.random()-0.5)*100,y:H*0.3,vx:(Math.random()-0.5)*6,vy:-Math.random()*6-2,r:4+Math.random()*6,c:`hsl(${Math.random()*360},100%,65%)`,rot:Math.random()*360,vr:(Math.random()-0.5)*10}));
-  let t=0; function anim(){ ctx.clearRect(0,0,W,H); pieces.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; p.vy+=0.18; p.vx*=0.99; p.rot+=p.vr; ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot*Math.PI/180); ctx.fillStyle=p.c; ctx.globalAlpha=0.9; ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r*0.6); ctx.restore(); }); t++; if(t<220) requestAnimationFrame(anim); else ctx.clearRect(0,0,W,H); } anim();
-}
-
-let displayMoney=state.money;
-function loop(){ displayMoney+=(state.money-displayMoney)*0.18; if(Math.abs(displayMoney-state.money)<0.5) displayMoney=state.money; $('moneyDisplay').textContent=fmt(displayMoney); requestAnimationFrame(loop); }
-loop();
-
-setInterval(()=>{ if(state.autoLevel>0){ const gain=state.autoLevel*state.clickValue; state.money+=gain; state.totalEarned+=gain; if(Math.random()<0.4){ const p=document.createElement('div'); p.className='particle'; p.textContent='+'+gain; p.style.color='#7dd3fc'; p.style.fontSize='14px'; p.style.top='20%'; p.style.transform=`translateX(-50%) translateX(${(Math.random()-0.5)*60}px)`; $('particleContainer').appendChild(p); setTimeout(()=>p.remove(),800); } updateUI(); } },1000);
+function format(n){ return n>=1e6? (n/1e6).toFixed(1)+'M' : n>=1e3? (n/1e3).toFixed(1)+'k' : Math.floor(n).toLocaleString(); }
 
 function updateUI(){
-  if(isSummerEvent &&!document.getElementById('summerBanner')){
-    const b=document.createElement('div'); b.id='summerBanner';
-    const days=Math.max(0, Math.ceil((SUMMER_END-Date.now())/86400000));
-    b.textContent=`🌞 SUMMER EVENT - ${days} days left!`;
-    b.style.cssText='position:fixed;top:68px;left:50%;transform:translateX(-50%);background:linear-gradient(90deg,#f97316,#eab308);padding:6px 16px;border-radius:999px;font-weight:800;font-size:12px;z-index:50;box-shadow:0 4px 20px rgba(249,115,22,.4)';
-    document.body.appendChild(b);
-    const coinInner=document.querySelector('#coinBtn > div');
-    if(coinInner) coinInner.style.background='radial-gradient(circle at 30% 25%,#fff7c2 0%,#fde68a 15%,#fbbf24 35%,#f97316 60%,#ea580c 85%,#c2410c 100%)';
-  }
-  $('perClickDisplay').textContent='+'+fmt(state.clickValue).slice(1);
-  $('autoDisplay').textContent=state.autoLevel?`${state.autoLevel*state.clickValue}/sec`:'0/sec';
-  $('clickCount').textContent=state.totalClicks.toLocaleString();
-  $('statClicks').textContent=state.totalClicks.toLocaleString();
-  $('statEarned').textContent=fmt(state.totalEarned);
-  $('statBoxes').textContent=state.boxesOpened.toLocaleString();
-  $('statRarest').textContent=state.boxesOpened===0?'-':rarityConfig[state.rarest]?.name||'-';
-  renderUpgrades(); renderShop();
+  $('coinCount').textContent = format(state.coins);
+  $('perClick').textContent = state.perClick;
+  $('statClicks').textContent = format(state.clicks);
+  $('statEarned').textContent = format(state.totalEarned);
+  $('statBoxes').textContent = state.boxesOpened;
+  $('statBest').textContent = state.bestPull!==null? RARITIES[state.bestPull].name : '-';
+  if(state.bestPull!==null) $('statBest').style.color = RARITIES[state.bestPull].color;
+
+  document.querySelectorAll('.crate').forEach(el=>{
+    const type = el.dataset.crate;
+    const c = CRATES[type];
+    const can = state.coins >= c.cost;
+    el.classList.toggle('disabled',!can);
+    el.querySelector('.price').textContent = c.cost;
+  });
+
+  const clickCost = Math.floor(50 * Math.pow(1.65, state.upgrades.click));
+  const autoCost = Math.floor(200 * Math.pow(1.75, state.upgrades.auto));
+  $('clickLvl').textContent = state.upgrades.click;
+  $('autoLvl').textContent = state.upgrades.auto;
+  $('autoRate').textContent = state.upgrades.auto;
+  $('buyClick').textContent = clickCost+' 💰';
+  $('buyClick').disabled = state.coins < clickCost;
+  $('buyAuto').textContent = autoCost+' 💰';
+  $('buyAuto').disabled = state.coins < autoCost;
+
+  renderInventory();
 }
 
-updateInventory(); updateUI(); displayMoney=state.money; setInterval(save,4000);
+function renderInventory(){
+  const grid = $('inventoryGrid');
+  grid.innerHTML='';
+  const items = Object.values(state.inventory).sort((a,b)=>b.rarityIdx - a.rarityIdx);
+  $('collectionCount').textContent = items.length? `(${items.length}/10)` : '';
+  if(!items.length){ grid.innerHTML='<div class="empty-inv">Open crates to collect foods!</div>'; return; }
+  items.forEach(it=>{
+    const div=document.createElement('div');
+    div.className='inv-item';
+    div.style.borderColor = RARITIES[it.rarityIdx].color+'55';
+    div.innerHTML = `<div class="inv-emoji">${it.emoji}</div><div class="inv-name">${it.name}</div><div class="inv-count">x${it.count}</div>${it.new?'<div class="new-badge">NEW</div>':''}`;
+    grid.appendChild(div);
+  });
+}
 
-$('resetBtn').onclick=()=>{ if(confirm('Reset ALL progress? This cannot be undone.')){ localStorage.removeItem('foodClicker_v2'); location.reload(); } };
+function handleClick(e){
+  initAudio();
+  state.clicks++;
+  state.coins += state.perClick;
+  state.totalEarned += state.perClick;
+  $('coinCount').classList.add('pulse'); setTimeout(()=>$('coinCount').classList.remove('pulse'),250);
+  $('bigCoin').classList.add('clicked'); setTimeout(()=>$('bigCoin').classList.remove('clicked'),100);
+  popSound();
+  showFloat('+'+state.perClick);
+  spawnSparks(e);
+  updateUI(); save();
+}
 
-let lastTouch=0; document.addEventListener('touchend',e=>{ const now=Date.now(); if(now-lastTouch<300) e.preventDefault(); lastTouch=now; },{passive:false});
-window.addEventListener('keydown',e=>{ if(e.code==='Space'){ e.preventDefault(); $('coinBtn').dispatchEvent(new PointerEvent('pointerdown')); } if(e.key.toLowerCase()==='b') buyBox('basic'); if(e.key.toLowerCase()==='l') buyBox(isSummerEvent? 'summer' : 'lucky'); if(e.key.toLowerCase()==='g') buyBox('golden'); });
+function showFloat(txt){
+  const el = document.createElement('div');
+  el.className='float-text'; el.textContent=txt;
+  el.style.left = (45 + Math.random()*10)+'%';
+  $('coinWrap').appendChild(el);
+  setTimeout(()=>el.remove(),800);
+}
+
+function spawnSparks(e){
+  const wrap = $('coinWrap').getBoundingClientRect();
+  const cx = wrap.left + wrap.width/2;
+  const cy = wrap.top + wrap.height/2;
+  for(let i=0;i<10;i++){
+    const s=document.createElement('div'); s.className='spark';
+    const ang = Math.random()*Math.PI*2; const dist = 40+Math.random()*60;
+    s.style.left = cx+'px'; s.style.top = cy+'px';
+    s.style.setProperty('--x', Math.cos(ang)*dist+'px');
+    s.style.setProperty('--y', Math.sin(ang)*dist+'px');
+    document.body.appendChild(s);
+    setTimeout(()=>s.remove(),600);
+  }
+}
+
+function buyCrate(type){
+  const c = CRATES[type];
+  if(state.coins < c.cost) return;
+  initAudio();
+  state.coins -= c.cost;
+  state.boxesOpened++;
+  updateUI(); save();
+  openCrate(c);
+}
+
+function pickFood(luck){
+  const weights = RARITIES.map((r,i)=> i>=2? r.weight*luck : r.weight);
+  const total = weights.reduce((a,b)=>a+b,0);
+  let rnd = Math.random()*total;
+  let idx=0;
+  for(let i=0;i<weights.length;i++){ rnd-=weights[i]; if(rnd<=0){ idx=i; break; } }
+  const rarity = RARITIES[idx];
+  const item = rarity.items[Math.floor(Math.random()*rarity.items.length)];
+  return {item, rarity, idx};
+}
+
+/* Confetti */
+const canvas = $('confetti'), ctx = canvas.getContext('2d');
+let particles=[];
+function resize(){ canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; }
+window.addEventListener('resize',resize); resize();
+function burstConfetti(colors, count=120){
+  const cols = colors || ['#8b5cf6','#3b82f6','#22c55e','#f59e0b','#ec4899','#fff'];
+  for(let i=0;i<count;i++){
+    particles.push({x:canvas.width/2, y:canvas.height/2.2, vx:(Math.random()-0.5)*14, vy:Math.random()*-14-2, r:Math.random()*5+3, color:cols[Math.floor(Math.random()*cols.length)], life:90+Math.random()*30, rot:Math.random()*360});
+  }
+}
+function confettiLoop(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  particles = particles.filter(p=>p.life>0);
+  particles.forEach(p=>{
+    p.x+=p.vx; p.y+=p.vy; p.vy+=0.35; p.vx*=0.99; p.life--; p.rot+=4;
+    ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot*Math.PI/180);
+    ctx.globalAlpha = Math.max(0,p.life/120); ctx.fillStyle=p.color; ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r); ctx.restore();
+  });
+  requestAnimationFrame(confettiLoop);
+}
+confettiLoop();
+
+function openCrate(crate){
+  const modal = $('modal');
+  const crateAnim = $('crateAnim');
+  const reveal = $('reveal');
+  modal.classList.add('active');
+  crateAnim.style.display='block';
+  crateAnim.className='crate-large '+crate.class+' shaking';
+  crateAnim.textContent = crate.icon;
+  reveal.classList.add('hidden');
+  particles=[];
+
+  const result = pickFood(crate.luck);
+
+  setTimeout(()=>{
+    crateAnim.classList.remove('shaking');
+    crateAnim.classList.add('burst');
+    openSound();
+    burstConfetti([result.rarity.color, '#fff', '#ffd700'], result.idx>=4?200:120);
+    if(result.idx>=4){
+      document.body.classList.add('flash-screen');
+      setTimeout(()=>document.body.classList.remove('flash-screen'),500);
+      if(result.idx===4) legendarySound(); else mythicSound();
+      burstConfetti(['#ff00cc','#00ccff','#ffcc00','#fff'],180);
+    }
+  },750);
+
+  setTimeout(()=>{
+    crateAnim.style.display='none';
+    $('revealEmoji').textContent = result.item.emoji;
+    $('revealName').textContent = result.item.name;
+    $('revealRarity').textContent = result.rarity.name;
+    $('revealRarity').style.color = result.rarity.color;
+    $('revealRarity').style.textShadow = `0 0 20px ${result.rarity.color}`;
+    $('revealRarity').className = result.idx===5? 'mythic-text' : '';
+    reveal.classList.remove('hidden');
+
+    // add to inventory
+    const key = result.item.name;
+    if(!state.inventory[key]){
+      state.inventory[key] = {count:0, emoji:result.item.emoji, name:result.item.name, rarity:result.rarity.id, rarityIdx:result.idx, new:true};
+      setTimeout(()=>{ if(state.inventory[key]) state.inventory[key].new=false; renderInventory(); },3500);
+    }
+    state.inventory[key].count++;
+    if(state.bestPull===null || result.idx>state.bestPull) state.bestPull=result.idx;
+    updateUI(); save();
+  },1150);
+}
+
+$('modal').addEventListener('click', e=>{
+  if(e.target.classList.contains('modal-bg') ||!e.target.closest('.open-stage') ||!$('reveal').classList.contains('hidden')){
+    $('modal').classList.remove('active');
+  }
+});
+
+document.querySelectorAll('.crate').forEach(el=>{
+  el.addEventListener('click',()=>{ if(!el.classList.contains('disabled')) buyCrate(el.dataset.crate); });
+});
+
+$('buyClick').addEventListener('click', ()=>{
+  const cost = Math.floor(50 * Math.pow(1.65, state.upgrades.click));
+  if(state.coins>=cost){ state.coins-=cost; state.upgrades.click++; state.perClick++; updateUI(); save(); popSound(); }
+});
+$('buyAuto').addEventListener('click', ()=>{
+  const cost = Math.floor(200 * Math.pow(1.75, state.upgrades.auto));
+  if(state.coins>=cost){ state.coins-=cost; state.upgrades.auto++; updateUI(); save(); popSound(); }
+});
+
+setInterval(()=>{
+  if(state.upgrades.auto>0){
+    state.coins += state.upgrades.auto;
+    state.totalEarned += state.upgrades.auto;
+    $('coinCount').classList.add('pulse'); setTimeout(()=>$('coinCount').classList.remove('pulse'),200);
+    updateUI();
+  }
+},1000);
+
+$('bigCoin').addEventListener('click', handleClick);
+$('bigCoin').addEventListener('touchstart', e=>{ e.preventDefault(); handleClick(e); }, {passive:false});
+
+$('resetBtn').addEventListener('click', ()=>{
+  if(confirm('Reset all progress?')){ localStorage.removeItem('coinFoodBoxes'); location.reload(); }
+});
+
+// init
+load();
+updateUI();
+setInterval(save,5000);
+
+// prevent double-tap zoom on iOS
+let lastTouch=0;
+document.addEventListener('touchend',e=>{ const now=Date.now(); if(now-lastTouch<=300) e.preventDefault(); lastTouch=now; },{passive:false});
